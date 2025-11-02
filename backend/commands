@@ -1,0 +1,5 @@
+(.venv) kushankpulipati@Kushanks-MacBook-Air backend % uvicorn main:app --reload --port 8000
+
+curl -sS -X POST "http://127.0.0.1:8000/search" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"human vs AI","top_k":5,"fetch_k":50}' | jq .
