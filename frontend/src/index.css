@@ -1,0 +1,424 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------
+   Theme variables (light)
+   --------------------------- */
+:root{
+  --bg-100: #f8fbff;
+  --bg-200: #eef6ff;
+  --accent-600: #0ea5e9; /* sky-500 */
+  --accent-700: #2563eb; /* indigo-600 */
+  --muted-400: #9aa6b2;
+  --card-bg: #ffffff;
+  --glass: rgba(255,255,255,0.6);
+  --panel-shadow: 0 6px 20px rgba(14, 165, 233, 0.08);
+  --text-main: rgb(20 23 27);
+  --muted-border: rgba(15,23,42,0.03);
+}
+
+/* ---------------------------
+   Page base
+   --------------------------- */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply antialiased;
+  /* soft diagonal background gradient */
+  background-image: linear-gradient(160deg, var(--bg-100) 0%, var(--bg-200) 50%, #f3f6ff 100%);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* ---------------------------
+   Hero / header
+   --------------------------- */
+.hero {
+  @apply rounded-xl px-6 py-8 shadow-md text-white;
+  background-image: linear-gradient(90deg, var(--accent-600), var(--accent-700));
+  box-shadow: 0 10px 30px rgba(37,99,235,0.12);
+}
+
+/* nicely sized heading inside hero */
+.hero .title {
+  @apply text-3xl md:text-4xl font-extrabold leading-tight;
+}
+.hero .subtitle {
+  @apply mt-2 text-sm md:text-base opacity-90;
+}
+
+/* ---------------------------
+   Input card & buttons
+   --------------------------- */
+.input-card {
+  @apply rounded-2xl shadow px-4 py-3 flex items-center gap-3;
+  /* use variable-backed background (override Tailwind bg-white) */
+  background: var(--card-bg) !important;
+  box-shadow: 0 8px 28px rgba(14,165,233,0.06);
+  border: 1px solid var(--muted-border);
+}
+
+.input-card .search-icon {
+  @apply w-6 h-6 text-sky-500;
+}
+
+.input-card input {
+  @apply flex-grow h-10 px-3 rounded-lg focus:outline-none placeholder:opacity-80;
+}
+
+.ask-btn {
+  @apply inline-flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg font-medium shadow;
+  transition: transform .08s ease, box-shadow .08s ease;
+}
+.ask-btn:active { transform: translateY(1px); }
+
+.input-card .clear-btn {
+  @apply text-sm text-gray-400 hover:text-gray-600;
+}
+
+/* ---------------------------
+   Panels / cards
+   --------------------------- */
+.panel {
+  @apply rounded-2xl p-4 flex flex-col min-h-[340px];
+  /* use var-backed background; override Tailwind explicitly */
+  background: var(--card-bg) !important;
+  box-shadow: var(--panel-shadow);
+  border: 1px solid var(--muted-border);
+}
+
+/* Also override any elements that were given bg-white by tailwind classes */
+.bg-white {
+  background: var(--card-bg) !important;
+}
+
+/* panel header small text */
+.panel-meta {
+  @apply flex items-center justify-between text-sm text-gray-500 mb-3;
+}
+
+.panel .panel-body {
+  @apply flex-1 overflow-auto scrollbar-thin space-y-4 pb-4;
+}
+
+/* message styles */
+.msg-user {
+  @apply inline-block bg-sky-600 text-white px-4 py-2 rounded-2xl shadow-md whitespace-pre-wrap;
+}
+.msg-agent {
+  @apply inline-block bg-gray-100 text-gray-900 px-4 py-2 rounded-2xl shadow-sm whitespace-pre-wrap;
+}
+
+/* avatar */
+.avatar {
+  @apply w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold;
+}
+.avatar.user { @apply bg-sky-200 text-sky-700; }
+.avatar.agent { @apply bg-gray-200 text-gray-700; }
+
+/* subtle meta text under messages */
+.msg-time { @apply text-xs text-gray-400 mt-1; }
+
+/* ---------------------------
+   Tiny helpers
+   --------------------------- */
+.small-muted { @apply text-xs text-gray-400; }
+
+/* ---------------------------
+   Scrollbar (nice + thin)
+   --------------------------- */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  border-radius: 6px;
+}
+
+/* ---------------------------
+   Responsive tweaks
+   --------------------------- */
+@media (min-width: 768px) {
+  .hero { padding: 2.25rem; }
+  .hero .title { font-size: 2.25rem; } /* slightly larger on md */
+}
+
+/* ---------------------------
+   Dark mode (optional utility)
+   --------------------------- */
+body.dark {
+  --bg-100: #06070a;
+  --bg-200: #0b1220;
+  --accent-600: #06b6d4;
+  --accent-700: #7c3aed;
+  --card-bg: #071025; /* darker card background */
+  --glass: rgba(255,255,255,0.03);
+  --panel-shadow: 0 6px 20px rgba(7,10,30,0.6);
+  --text-main: #e6eef8;
+  --muted-border: rgba(255,255,255,0.04);
+  color: var(--text-main);
+  background-image: linear-gradient(160deg, #020617 0%, #07122a 60%);
+}
+
+/* ensure important UI parts follow dark vars too */
+body.dark .panel,
+body.dark .input-card,
+body.dark .bg-white {
+  background: var(--card-bg) !important;
+  color: var(--text-main);
+  border-color: var(--muted-border) !important;
+}
+/* ensure the whole viewport uses the page background (not just header) */
+body, html, #root {
+  min-height: 100vh;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* when in dark mode, make entire viewport background dark and subtle */
+body.dark {
+  /* existing variables already set above in your file; ensure this is present */
+  background-image: linear-gradient(160deg, #020617 0%, #07122a 60%);
+  background-color: #071022; /* fallback solid color */
+}
+
+/* The centered app wrapper: make it transparent so the page bg shows through */
+.app-wrapper, .app-container, .max-w-6xl {
+  background: transparent !important;
+}
+
+/* If your layout uses a specific centered container div, make sure it doesn't force a light background.
+   If you use <main className="max-w-6xl mx-auto ...">, above rule will help; otherwise target your wrapper class. */
+
+/* Slightly reduce panel contrast in dark so text pops but panels still read */
+body.dark .panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)) !important;
+  border-color: rgba(255,255,255,0.04) !important;
+  box-shadow: 0 6px 22px rgba(7,10,30,0.45);
+}
+
+/* Dark input card tweak */
+body.dark .input-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)) !important;
+  border-color: rgba(255,255,255,0.04) !important;
+}
+/* ---------------------------
+   Dark-mode panel contrast tweaks
+   (append after your body.dark rules)
+   --------------------------- */
+
+/* stronger border + inner highlight + deeper shadow for panels */
+body.dark .panel {
+  /* keep existing gradient-like background, but increase contrast */
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.03)) !important;
+  /* brighter border so panels separate from page bg */
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  /* deeper drop shadow for elevation */
+  box-shadow: 0 12px 36px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+  /* slightly increase border radius contrast */
+  border-radius: 14px;
+}
+
+/* lighten panel meta / labels in dark to read better */
+body.dark .panel-meta,
+body.dark .panel .text-gray-500 {
+  color: rgba(230,238,248,0.55) !important; /* softer light text */
+}
+
+/* make message bubbles stand out slightly more */
+body.dark .msg-agent {
+  background: rgba(255,255,255,0.02);
+  color: rgba(230,238,248,0.95);
+  box-shadow: none;
+}
+body.dark .msg-user {
+  box-shadow: 0 6px 16px rgba(2,6,23,0.6);
+}
+
+/* add thin vertical separator between left/right panels */
+@media (min-width: 768px) {
+  .debate-separator {
+    position: absolute;
+    left: 50%;
+    top: 160px; /* roughly under header; adjust if your header height changes */
+    bottom: 40px;
+    width: 1px;
+    transform: translateX(-0.5px);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* make sure panels are above separator */
+  .panel { position: relative; z-index: 1; }
+}
+
+/* subtle highlight on focused input in dark */
+body.dark .input-card:focus-within {
+  box-shadow: 0 12px 32px rgba(2,6,23,0.65), inset 0 1px 0 rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* optional small tweak: increase panel-body padding to add separation */
+body.dark .panel .panel-body {
+  padding: 22px;
+}
+/* ---- Input visibility fixes ---- */
+
+/* Default input colors (light mode) */
+.input-card input {
+  background: #ffffff;              /* keeps the white inner field */
+  color: var(--text-main) !important; /* text uses theme text color */
+  caret-color: var(--accent-600);
+  border: none;
+}
+
+/* Placeholder color (light) */
+.input-card input::placeholder {
+  color: rgba(15,23,42,0.35);
+}
+
+/* Focus styles */
+.input-card input:focus {
+  outline: none;
+  box-shadow: 0 6px 20px rgba(37,99,235,0.06);
+}
+
+/* Dark-mode: make input field slightly translucent and text visible */
+body.dark .input-card input {
+  background: rgba(255,255,255,0.04) !important; /* subtle field in dark */
+  color: var(--text-main) !important;             /* light text in dark mode */
+  caret-color: var(--accent-600);
+}
+
+/* Dark-mode placeholder (lighter but visible) */
+body.dark .input-card input::placeholder {
+  color: rgba(230,238,248,0.36) !important;
+}
+
+/* If your input is inside some nested element that sets color globally,
+   this forces correct color and ensures it overrides Tailwind utility classes */
+.input-card input, .input-card input::placeholder {
+  -webkit-text-fill-color: unset !important;
+}
+/* semantic row helpers for conversation layout (safe for Tailwind) */
+.panel .panel-body > .msg-row {
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+/* right-side rows (Agent B) */
+.panel .panel-body > .msg-row.msg-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* left-side rows (Agent A) */
+.panel .panel-body > .msg-row.msg-left {
+  display: flex;
+  justify-content: flex-start;
+}
+/* Debate chat layout helpers */
+.msg-row {
+  display: flex;
+  margin: 4px 6px;
+}
+
+.msg-row.msg-left {
+  justify-content: flex-start;
+}
+
+.msg-row.msg-right {
+  justify-content: flex-end;
+}
+
+/* Bubbles & avatars in dark mode */
+body.dark .avatar.agent {
+  background-color: #334155; /* slate-700 */
+  color: #e2e8f0;
+}
+body.dark .avatar.user {
+  background-color: #0ea5e9; /* sky-500 */
+  color: #f8fafc;
+}
+/* ----------- Message bubbles ------------- */
+.msg-bubble {
+  max-width: 75%;
+  border-radius: 1.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: background 0.25s ease, transform 0.15s ease;
+}
+
+.msg-bubble:hover {
+  transform: translateY(-1px);
+}
+
+/* Agent A bubble */
+.bubble-a {
+  background: #e0f2fe; /* sky-100 */
+  color: #075985;
+}
+
+body.dark .bubble-a {
+  background: #0284c7; /* sky-600 */
+  color: #f0f9ff;
+}
+
+/* Agent B bubble */
+.bubble-b {
+  background: #f1f5f9; /* slate-100 */
+  color: #0f172a;
+}
+
+body.dark .bubble-b {
+  background: #334155; /* slate-700 */
+  color: #e2e8f0;
+}
+
+/* Timestamp inside bubble */
+.msg-time {
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  opacity: 0.6;
+  text-align: right;
+}
+
+/* Avatars */
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.avatar.agent {
+  background-color: #bae6fd; /* light sky */
+  color: #0369a1;
+}
+
+.avatar.user {
+  background-color: #cbd5e1; /* slate-300 */
+  color: #1e293b;
+}
+
+body.dark .avatar.agent {
+  background-color: #0ea5e9;
+  color: #f8fafc;
+}
+
+body.dark .avatar.user {
+  background-color: #475569;
+  color: #e2e8f0;
+}
