@@ -422,3 +422,9 @@ body.dark .avatar.user {
   background-color: #475569;
   color: #e2e8f0;
 }
+.answer-box {
+  padding: 16px;
+  min-height: 0; /* avoid forcing tall boxes */
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
