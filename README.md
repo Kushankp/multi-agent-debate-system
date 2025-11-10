@@ -1,32 +1,43 @@
 # 🧠 Multi-Agent Debate System
 
-## 💡 Project Idea
-This project explores the use of multiple AI agents that **debate complex topics** from opposing viewpoints (Pro vs Con) under the supervision of a **moderator agent**.  
-The goal is to analyze how **collaborative and adversarial reasoning** among LLMs can improve argument quality, reasoning depth, and factual alignment.
+## 💡 Concept
+
+The **Multi-Agent Debate System** is designed to explore how two AI agents can engage in structured debates on complex AI-related topics. Each debate involves two opposing agents — **Agent A (Pro)** and **Agent B (Con)** — with a **Judge Agent** evaluating their arguments to determine the winner.
+
+The goal is to study how debate-based reasoning between multiple AI systems can improve factual grounding, reasoning depth, and alignment.
 
 ---
 
 ## ⚙️ Tech Stack
-- **Python 3.10+**
-- **Pinecone** for vector search and knowledge retrieval (RAG)
-- **SentenceTransformers** for embedding generation
-- **Streamlit / React (optional)** for frontend visualization
+
+**Backend**
+
+* Python 3.10+
+* FastAPI — backend API framework
+* SentenceTransformers — embedding generation
+* Pinecone — vector database for retrieval-augmented generation (RAG)
+* Groq / OpenAI API — large language model interaction and debate logic
+
+**Frontend**
+
+* React — user interface for debate visualization
+* Axios — handles API communication
 
 ---
 
-## 🚀 Overview
-- Each debate involves:
-  - A **Pro Agent** (argues in favor)
-  - A **Con Agent** (argues against)
-  - A **Moderator Agent** (evaluates and declares a winner)
-- Optional integration with Wikipedia embeddings for grounded responses.
-- Designed for research on **multi-agent reasoning**, **alignment**, and **AI argumentation**.
+## 🚀 Features
+
+* Two debating agents that alternate responses across multiple rounds (A → B → A → B)
+* Judge agent that evaluates and scores debates
+* Context-based retrieval for grounded responses
+* Structured prompts for consistency and reasoning clarity
 
 ---
 
-## 🧩 Planned Features
-- Multi-round debates with agent memory  
-- Fine-tuned argument scoring and evaluation models  
-- Visual debate interface for real-time user interaction  
-- Integration with multiple knowledge sources (Wikipedia, news, papers)  
-- Logging and analytics dashboard for debate quality tracking  
+## 🧩 Research Goal
+
+To analyze how adversarial and collaborative reasoning among AI agents can:
+
+* Improve factual consistency
+* Enhance reasoning depth
+* Support better decision-making in LLM systems
