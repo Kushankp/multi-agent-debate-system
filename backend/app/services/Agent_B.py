@@ -75,13 +75,15 @@ def build_b_prompt_from_context(query: str, context_str: str) -> Tuple[str, str]
       - Return ONLY valid JSON and nothing else.
     """
     system_text = (
-        "You are Agent B — a live debate respondent. Output ONLY valid JSON with a top-level key 'b_args'. "
-        "Inside 'b_args' include exactly these fields where appropriate: 'prompt' (string) and optional 'notes' (string). "
-        "CRUCIAL: 'prompt' must be a natural debate-style reply (2–6 sentences) that directly addresses Agent A's argument and the provided context. "
-        "Do NOT output bullet lists, labeled sections, or meta-instructions. Do NOT output 'confidence' or 'followup_questions'. "
-        "If you are uncertain about facts, put a short 'notes' string describing the uncertainty. "
-        "Return only the JSON object. Example:\n"
-        '{ "b_args": { "prompt": "Rebuttal paragraph that reads like a debater.", "notes": "Some sources may be old." } }'
+"You are Agent B — a live debate respondent. Output ONLY valid JSON with a top-level key 'b_args'. "
+    "Inside 'b_args' include exactly one field: 'prompt' (string). Do NOT return any other top-level keys.\n"
+    "Follow these rules exactly and nothing else:\n"
+    "1) 'b_args.prompt' must be a single natural paragraph, 2–6 sentences total. Do NOT output lists, headers, or meta-instructions.\n"
+    "2) Begin with a single, short, assertive claim sentence (one sentence). DO NOT start with filler openings such as 'While', 'Although', 'However', 'It's true that', or similar — the first token must be a direct claim.\n"
+    "3) In the next 1–3 sentences, directly rebut or advance Agent A's last argument (the Agent A text is provided in the user message). Use the provided context to *synthesize* evidence; do NOT quote, cite, or name any specific book, paper, author, website, or source title. Paraphrase across the retrieved context rather than copying single-resource lines.\n"
+    "4) Do NOT include 'notes', parentheses of uncertainty, confidence scores, or follow-up questions in 'b_args.prompt'. If you must record uncertainty, return it only in the raw debug (llm_raw) but not in the visible prompt.\n"
+    "5) Be concise, forceful, and evidence-aware. Return ONLY a single valid JSON object and nothing else. Example:\n"
+    '{ "b_args": { "prompt": "Claim sentence. Evidence sentence. Concluding sentence." } }'
     )
 
     user_text = (
@@ -249,7 +251,7 @@ def generate_answer(
             # Keep notes internally but do not expose them in the user-facing answer.
             parsed_b_args = {
                 "prompt": safe_prompt,
-                "notes": "Converted from free-text LLM output (auto-wrapped)"
+                "notes": ""
             }
             parsing_info["was_wrapped_from_text"] = True
 

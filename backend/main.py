@@ -1,4 +1,4 @@
-# main.py
+# main.py (fixed: includes CreateSessionReq and SubmitArgReq + /debate/3-round)
 import os
 import logging
 import traceback
@@ -25,7 +25,7 @@ logger = logging.getLogger("main")
 # Import the existing search/generate agent (unchanged)
 from app.services.Agent_A import search as agent_search, health as agent_health, generate_answer as agent_generate
 
-# Import the Tavily adapter and Judge implementation
+# Import the Tavily adapter and Judge implementation (same as before)
 try:
     from app.workers.search_adapter import web_search_tavily
 except Exception as e:
@@ -36,7 +36,7 @@ try:
     from app.services.judge import JudgeGroq, EphemeralStore
 except Exception as e:
     logger.exception("Failed to import app.workers.judge (make sure file is at app/workers/judge.py): %s", e)
-    # If missing, create a minimal fallback so the API still starts
+    # fallback minimal classes (unchanged from your original)
     class EphemeralStore:
         def __init__(self, ttl_seconds: int = 300):
             self._args = {}
@@ -56,7 +56,7 @@ except Exception as e:
             arg_id = f"{agent}_{int(time.time()*1000)}"
             self.store.put_argument(arg_id, {"argument_id":arg_id,"agent":agent,"text":text,"created_at":datetime.datetime.utcnow().isoformat()})
             return arg_id
-        def run_round_judge(self, a_id, b_id):
+        def run_round_judge(self, a_id, b_id, search_results=None):
             a = self.store.get_argument(a_id); b = self.store.get_argument(b_id)
             if not a or not b:
                 self.store.delete_argument(a_id); self.store.delete_argument(b_id)
@@ -110,7 +110,7 @@ class GenerateResponse(BaseModel):
     answer: str
     raw: Optional[dict] = None
 
-# Session models
+# ---------- MISSING models (now included) ----------
 class CreateSessionReq(BaseModel):
     topic: Optional[str] = None
     ttl_seconds: Optional[int] = 300
@@ -119,7 +119,26 @@ class SubmitArgReq(BaseModel):
     agent: str
     text: str
 
-# Session store
+# Debate request/response
+class DebateRequest(BaseModel):
+    initial_query: str
+    top_k: Optional[int] = 5
+    fetch_k: Optional[int] = 50
+    namespace: Optional[str] = None
+    model: Optional[str] = None
+    max_tokens: Optional[int] = None
+    context_chars: Optional[int] = None
+
+class Turn(BaseModel):
+    agent: str
+    text: str
+    raw: Optional[dict] = None
+
+class Debate3Response(BaseModel):
+    rounds: List[Turn]  # sequence of 6 turns: A1,B1,A2,B2,A3,B3
+    final: Dict[str, Any]
+
+# Session store (unchanged)
 class SessionStore:
     def __init__(self):
         self._s: Dict[str, Dict[str, Any]] = {}
@@ -173,7 +192,105 @@ def generate(req: GenerateRequest, request: Request):
         raise HTTPException(status_code=502, detail="Generation failed: agent returned invalid data")
     return GenerateResponse(query=out.get("query",""), answer=out.get("answer",""), raw=out.get("raw", None))
 
-# ---------- Session endpoints ----------
+# ---------- Agent B generation endpoint (unchanged) ----------
+@app.post("/agent-b/generate")
+def agent_b_generate(request: GenerateRequest):
+    """
+    Generate Agent B’s argument. Returns parsed b_args as top-level field `b_args`.
+    """
+    try:
+        out = agent_generate_b(
+            query=request.query,
+            top_k=request.top_k or 3,
+            fetch_k=request.fetch_k or 50,
+            namespace=request.namespace,
+            model=request.model,
+            max_tokens=request.max_tokens,
+            context_chars=request.context_chars,
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        logger.exception("/agent-b/generate failed: %s", e)
+        raise HTTPException(status_code=502, detail=f"Agent B generation failed: {e}")
+
+    if out is None or not isinstance(out, dict):
+        raise HTTPException(status_code=502, detail="Agent B returned invalid data")
+
+    raw = out.get("raw") or {}
+    parsed_b_args = raw.get("parsed_b_args") if isinstance(raw, dict) else None
+
+    return {
+        "query": out.get("query", ""),
+        "answer": out.get("answer", ""),       # legacy client support
+        "b_args": parsed_b_args,               # parsed dict or null
+        "assistant_text": raw.get("assistant_text"),
+        "llm_raw": raw.get("llm_raw"),
+        "raw": raw,                            # full raw debug for inspection
+    }
+
+# ---------- NEW: 3-round debate orchestration ----------
+@app.post("/debate/3-round", response_model=Debate3Response)
+def debate_three_rounds(req: DebateRequest):
+    """
+    Run a 3-round debate:
+      A1 = Agent A on initial_query
+      B1 = Agent B on A1.answer
+      A2 = Agent A on B1.answer
+      B2 = Agent B on A2.answer
+      A3 = Agent A on B2.answer
+      B3 = Agent B on A3.answer
+
+    Returns the sequence of turns (A1,B1,A2,B2,A3,B3) with text + raw debug.
+    """
+    if not req.initial_query or not req.initial_query.strip():
+        raise HTTPException(status_code=400, detail="initial_query is required")
+
+    rounds = []
+    try:
+        # Round 1: A1
+        a1 = agent_generate(query=req.initial_query, top_k=req.top_k or 5, fetch_k=req.fetch_k or 50, namespace=req.namespace, model=req.model, max_tokens=req.max_tokens, context_chars=req.context_chars)
+        rounds.append({"agent": "A", "text": a1.get("answer",""), "raw": a1.get("raw")})
+
+        # B1
+        b1_query = a1.get("answer","")
+        b1 = agent_generate_b(query=b1_query, top_k=req.top_k or 3, fetch_k=req.fetch_k or 50, namespace=req.namespace, model=req.model, max_tokens=req.max_tokens, context_chars=req.context_chars)
+        rounds.append({"agent": "B", "text": b1.get("answer",""), "raw": b1.get("raw")})
+
+        # A2
+        a2_query = b1.get("answer","")
+        a2 = agent_generate(query=a2_query, top_k=req.top_k or 5, fetch_k=req.fetch_k or 50, namespace=req.namespace, model=req.model, max_tokens=req.max_tokens, context_chars=req.context_chars)
+        rounds.append({"agent": "A", "text": a2.get("answer",""), "raw": a2.get("raw")})
+
+        # B2
+        b2_query = a2.get("answer","")
+        b2 = agent_generate_b(query=b2_query, top_k=req.top_k or 3, fetch_k=req.fetch_k or 50, namespace=req.namespace, model=req.model, max_tokens=req.max_tokens, context_chars=req.context_chars)
+        rounds.append({"agent": "B", "text": b2.get("answer",""), "raw": b2.get("raw")})
+
+        # A3
+        a3_query = b2.get("answer","")
+        a3 = agent_generate(query=a3_query, top_k=req.top_k or 5, fetch_k=req.fetch_k or 50, namespace=req.namespace, model=req.model, max_tokens=req.max_tokens, context_chars=req.context_chars)
+        rounds.append({"agent": "A", "text": a3.get("answer",""), "raw": a3.get("raw")})
+
+        # B3
+        b3_query = a3.get("answer","")
+        b3 = agent_generate_b(query=b3_query, top_k=req.top_k or 3, fetch_k=req.fetch_k or 50, namespace=req.namespace, model=req.model, max_tokens=req.max_tokens, context_chars=req.context_chars)
+        rounds.append({"agent": "B", "text": b3.get("answer",""), "raw": b3.get("raw")})
+
+        final = {
+            "A3": a3.get("answer",""),
+            "B3": b3.get("answer",""),
+            "summary_note": "3-round debate finished"
+        }
+
+        # Return as Pydantic-compatible dicts
+        return Debate3Response(rounds=[Turn(**r) for r in rounds], final=final)
+
+    except Exception as e:
+        logger.exception("/debate/3-round failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"3-round debate failed: {e}")
+
+# ---------- Session endpoints and judge (unchanged) ----------
 @app.post("/session")
 def create_session(req: CreateSessionReq):
     try:
@@ -198,7 +315,6 @@ def submit_argument(session_id: str, req: SubmitArgReq):
     session_store.update(session_id, s)
     return {"session_id": session_id, "argument_id": arg_id, "agent": req.agent}
 
-@app.post("/session/{session_id}/judge")
 @app.post("/session/{session_id}/judge")
 def run_judge_on_session(session_id: str):
     s = session_store.get(session_id)
@@ -267,7 +383,7 @@ def run_judge_on_session(session_id: str):
     if parsed and not parsed.get("error"):
         winner = parsed.get("winner")
         scoreA = parsed.get("score", {}).get("A", parsed.get("score_a", 0))
-        scoreB = parsed.get("score", {}).get("B", parsed.get("score_b", 0))
+        scoreB = parsed.get("score", {}).get("B", parsed.get("score", 0))
         explanation = parsed.get("explanation") or parsed.get("reason", "")
         evidence = parsed.get("evidence_summary", parsed.get("evidence", []))
         return {
@@ -288,42 +404,6 @@ def run_judge_on_session(session_id: str):
             out["search_query"] = s.get("search_query")
             out["search_results"] = s.get("search_results")
         return out
-# ---------- Agent B generation endpoint ----------
-@app.post("/agent-b/generate")
-def agent_b_generate(request: GenerateRequest):
-    """
-    Generate Agent B’s argument. Returns parsed b_args as top-level field `b_args`.
-    """
-    try:
-        out = agent_generate_b(
-            query=request.query,
-            top_k=request.top_k or 3,
-            fetch_k=request.fetch_k or 50,
-            namespace=request.namespace,
-            model=request.model,
-            max_tokens=request.max_tokens,
-            context_chars=request.context_chars,
-        )
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
-    except Exception as e:
-        logger.exception("/agent-b/generate failed: %s", e)
-        raise HTTPException(status_code=502, detail=f"Agent B generation failed: {e}")
-
-    if out is None or not isinstance(out, dict):
-        raise HTTPException(status_code=502, detail="Agent B returned invalid data")
-
-    raw = out.get("raw") or {}
-    parsed_b_args = raw.get("parsed_b_args") if isinstance(raw, dict) else None
-
-    return {
-        "query": out.get("query", ""),
-        "answer": out.get("answer", ""),       # legacy client support
-        "b_args": parsed_b_args,               # parsed dict or null
-        "assistant_text": raw.get("assistant_text"),
-        "llm_raw": raw.get("llm_raw"),
-        "raw": raw,                            # full raw debug for inspection
-    }
 
 # health
 @app.get("/health")

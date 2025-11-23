@@ -386,14 +386,26 @@ def generate_answer(
 
         # 3) Compose system + user instructions that force a debate-style reply
         system_msg = (
-            "You are ADAM, a live debate respondent. Produce a single natural paragraph (2-6 sentences) "
-            "that directly addresses the user's question and the provided context. Be assertive, concise, and "
-            "evidence-aware. Do NOT output numbered lists, labeled sections, or meta-instructions. "
-            "If you are uncertain about facts, include a single short parenthetical note at the end like "
-            " '(Some sources may be older.)'. Output only the reply text (no headers)."
-        )
+     "You are ADAM, a live debate respondent. Follow these rules exactly:\n"
+    "1) Output a single natural paragraph, 2–6 sentences total. Do NOT output lists, headers, or any meta-instructions.\n"
+    "2) Begin with a single, short, assertive claim sentence (one sentence). DO NOT start with filler openings such as "
+    "'While', 'Although', 'However', 'It\\'s true that', or similar — the first token must be a direct claim.\n"
+    "3) In the next 1–2 sentences, rebut or advance the opponent's last claim (if present) or state a clear opening stance. "
+    "Use the provided context to *synthesize* evidence; do NOT quote, cite, or name any specific book, paper, author, website, or source title. "
+    "Paraphrase across the retrieved context instead of copying single-resource lines.\n"
+    "4) If facts are uncertain, append a single short parenthetical note <= 120 chars at the very end (e.g. '(Some sources may be older.)').\n"
+    "5) Be concise, forceful, and evidence-aware. Output only the reply text (no JSON, no extra fields)."
+)
 
-        user_msg = f"Context:\n{context_str}\n\nQuestion: {query}\n\nNow produce the single-paragraph debate reply."
+        user_msg = (
+             "Context (retrieved evidence):\n"
+    f"{context_str}\n\n"
+    "Question: " + query + "\n\n"
+    "If there is an opponent argument available, it will be provided below. "
+    "Respond directly to that argument (cite context if possible). Otherwise, state your opening stance.\n\n"
+    f"Opponent (if any):\n{{opponent_text}}\n\n"   # replace with the latest opponent text when you call generate
+    "Now produce the single-paragraph debate reply following the system rules above."
+        )
 
         messages = [
             {"role": "system", "content": system_msg},
