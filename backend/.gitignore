@@ -1,0 +1,156 @@
+# ============================================
+# Python & Backend .gitignore
+# ============================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# --- Virtual Environments ---
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# --- Environment / Secrets ---
+# IMPORTANT: Keep your API keys, tokens, and configs out of Git!
+*.env
+.env.local
+.env.*.local
+*.ini
+*.cfg
+*.json
+!package.json        # keep node package config if hybrid repo
+
+# --- Logs & Debug ---
+*.log
+*.out
+*.err
+logs/
+logging/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- Build / Distribution ---
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Unit test / Coverage ---
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+test-reports/
+
+# --- Type checker ---
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+
+# --- Notebooks ---
+*.ipynb_checkpoints
+.ipynb_checkpoints/
+
+# --- Databases / Data dumps ---
+*.sqlite3
+*.db
+*.sqlite
+data/
+datasets/
+__data__/
+tmp/
+temp/
+*.csv
+*.tsv
+*.parquet
+
+# --- IDEs & Editors ---
+# VS Code
+.vscode/
+.history/
+.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Others
+*.swp
+*~
+.project
+.settings/
+.metadata/
+.DS_Store
+Thumbs.db
+
+# --- Node / Frontend build (if full-stack) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+dist/
+build/
+.cache/
+package-lock.json
+
+# --- Docker ---
+*.pid
+*.seed
+docker-compose.override.yml
+.env.docker
+.dockerignore
+Dockerfile.*
+
+# --- Local development ---
+*.bak
+*.tmp
+*.temp
+*.log
+*.local
+__local__/
+
+# --- Model files / AI specific ---
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.pkl
+*.model
+models/
+outputs/
+runs/
+checkpoints/
+
+# --- Colab/Google Drive junk ---
+*.ipynb_checkpoints
+*.colab
